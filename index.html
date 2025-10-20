@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Relato Diário de Serviço</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f2f2f2;
+    margin: 0;
+  }
+  header {
+    background: #222;
+    color: #fff;
+    text-align: center;
+    padding: 15px;
+    font-size: 20px;
+  }
+  main {
+    max-width: 800px;
+    margin: 20px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.2);
+  }
+  input[type="date"] {
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+  }
+  textarea {
+    width: 100%;
+    height: 80px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 16px;
+    resize: none;
+  }
+  button {
+    margin-top: 10px;
+    margin-right: 8px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    background: #007bff;
+    color: white;
+    cursor: pointer;
+  }
+  button:hover { background: #0056b3; }
+
+  .dia {
+    margin-top: 25px;
+    border-top: 2px solid #ccc;
+    padding-top: 15px;
+  }
+  .titulo-dia {
+    font-weight: bold;
+    color: #007bff;
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  .item {
+    background: #f8f8f8;
+    border-left: 4px solid #007bff;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 5px;
+  }
+  .hora {
+    color: #777;
+    font-size: 13px;
+  }
+
+  #relatosSalvos {
+    margin-top: 40px;
+    background: #fafafa;
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid #ccc;
+  }
+
+  #relatosSalvos h3 {
+    color: #007bff;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<header>📘 Relato Diário de Serviço</header>
+<main>
+  <label><strong>Selecione a data:</strong></label><br>
+  <input type="date" id="dataSelecionada"><br>
+
+  <textarea id="texto" placeholder="Escreva aqui o que fez nesse dia..."></textarea><br>
+  <button onclick="salvar()">💾 Salvar e Enviar</button>
+  <button onclick="imprimir()">🖨️ Imprimir</button>
+  <button onclick="limpar()">🗑️ Limpar tudo</button>
+
+  <div id="relatosSalvos">
+    <h3>📂 Relatos Salvos</h3>
+    <div id="relatos"></div>
+  </div>
+</main>
+
+<script>
+  const dataInput = document.getElementById("dataSelecionada");
+  const hoje = new Date().toISOString().split('T')[0];
+  dataInput.value = hoje;
+
+  function carregar() {
+    const dados = JSON.parse(localStorage.getItem('relatosDiarios')) || {};
+    const container = document.getElementById('relatos');
+    container.innerHTML = "";
+
+    // Ordena as datas em ordem crescente
+    const datasOrdenadas = Object.keys(dados).sort((a,b) => new Date(a) - new Date(b));
+
+    datasOrdenadas.forEach(dia => {
+      const bloco = document.createElement('div');
+      bloco.className = 'dia';
+      bloco.innerHTML = `<div class="titulo-dia">📅 ${formatarData(dia)}</div>`;
+      dados[dia].forEach(item => {
+        bloco.innerHTML += `
+          <div class="item">
+            ${item.texto}
+            <div class="hora">${item.hora}</div>
+          </div>
+        `;
+      });
+      container.appendChild(bloco);
+    });
+  }
+
+  function formatarData(dataISO) {
+    const [ano, mes, dia] = dataISO.split("-");
+    return `${dia}/${mes}/${ano}`;
+  }
+
+  function salvar() {
+    const data = dataInput.value;
+    const texto = document.getElementById('texto').value.trim();
+    if (!data) return alert("Escolha uma data!");
+    if (!texto) return alert("Digite o que fez para salvar!");
+
+    const hora = new Date().toLocaleTimeString();
+    const dados = JSON.parse(localStorage.getItem('relatosDiarios')) || {};
+    if (!dados[data]) dados[data] = [];
+    dados[data].push({ texto, hora });
+
+    localStorage.setItem('relatosDiarios', JSON.stringify(dados));
+    document.getElementById('texto').value = '';
+    carregar();
+  }
+
+  function imprimir() {
+    window.print();
+  }
+
+  function limpar() {
+    if (confirm("Tem certeza que deseja apagar todos os relatos?")) {
+      localStorage.removeItem('relatosDiarios');
+      carregar();
+    }
+  }
+
+  carregar();
+</script>
+</body>
+</html>
